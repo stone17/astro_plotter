@@ -1,0 +1,6 @@
+numpy
+pyqtgraph
+PyQt5
+fast_histogram
+PyOpenGL
+colour-demosaicing
