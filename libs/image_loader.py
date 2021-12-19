@@ -75,17 +75,17 @@ class IMAGE():
                 pattern = 'RGGB'
             print('Demosaicing with {}'.format(pattern))
             self.data_cfa = image_debayer.debayer(self.data_mono, pattern)
-            # simple gray-world WB
+            self.histogram_r = histogram1d(self.data_cfa[:,:,0], range=[0, 2**self.BITPIX], bins=256)
+            self.histogram_g = histogram1d(self.data_cfa[:,:,1], range=[0, 2**self.BITPIX], bins=256)
+            self.histogram_b = histogram1d(self.data_cfa[:,:,2], range=[0, 2**self.BITPIX], bins=256)
+            self.clip_cfa = self.get_clip(self.histogram_g, self.histogram_edges, [0.1, 0.995])
+            # simple grey-world WB
             r_mean = np.mean(self.data_cfa[:,:,0])
             g_mean = np.mean(self.data_cfa[:,:,1])
             b_mean = np.mean(self.data_cfa[:,:,2])
             self.data_cfa[:,:,0] /= (r_mean / g_mean)
             self.data_cfa[:,:,2] /= (b_mean / g_mean)
             self.is_demosaiced = True
-            self.histogram_r = histogram1d(self.data_cfa[:,:,0], range=[0, 2**self.BITPIX], bins=256)
-            self.histogram_g = histogram1d(self.data_cfa[:,:,1], range=[0, 2**self.BITPIX], bins=256)
-            self.histogram_b = histogram1d(self.data_cfa[:,:,2], range=[0, 2**self.BITPIX], bins=256)
-            self.clip_cfa = self.get_clip(self.histogram_g, self.histogram_edges, [0.1, 0.995])
         else:
             print('Image not loaded!')
 

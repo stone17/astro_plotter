@@ -1,5 +1,7 @@
 # astro_plotter
 
+Load fits files and display with Histogram.
+
 ### Setup
 
 #### Dependencies

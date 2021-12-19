@@ -99,22 +99,12 @@ class UI(QMainWindow):
     def display_image(self):
         if self.get_color_mode() == Color.MONO:
             self.im_frame.setImage(self.img.data_mono, levels=self.img.clip_mono)
-            self.histo_m.show()
-            self.histo_m.setData(self.img.histogram_edges, self.img.histogram_mono)
-            self.histo_r.hide()
-            self.histo_g.hide()
-            self.histo_b.hide()
         else:
             self.img.debayer()
             self.im_frame.setImage(self.img.data_cfa, levels=self.img.clip_cfa)
-            self.histo_m.hide()
-            self.histo_r.show()
-            self.histo_g.show()
-            self.histo_b.show()
-            self.histo_r.setData(self.img.histogram_edges, self.img.histogram_r)
-            self.histo_g.setData(self.img.histogram_edges, self.img.histogram_g)
-            self.histo_b.setData(self.img.histogram_edges, self.img.histogram_b)
+        self.update_histogram()
 
+    @pyqtSlot()
     def color_mode_clicked(self):
         radioButton = self.sender()
         if radioButton.isChecked():
@@ -122,11 +112,37 @@ class UI(QMainWindow):
             if hasattr(self, 'img'):
                 self.display_image()
 
+    @pyqtSlot()
     def get_color_mode(self):
         for cm in self.color_modes:
             if cm.isChecked():
                 return cm.mode
 
+    @pyqtSlot()
+    def update_histogram(self):
+        if not hasattr(self, 'img'):
+            return
+        if self.get_color_mode() == Color.MONO:
+            self.histo_m.show()
+            self.histo_r.hide()
+            self.histo_g.hide()
+            self.histo_b.hide()
+            self.histo_m.setData(self.img.histogram_edges, self.img.histogram_mono)
+        else:
+            self.histo_m.hide()
+            self.histo_r.show()
+            self.histo_g.show()
+            self.histo_b.show()
+            if hasattr(self.img, 'is_demosaiced'):
+                self.histo_r.setData(self.img.histogram_edges, self.img.histogram_r)
+                self.histo_g.setData(self.img.histogram_edges, self.img.histogram_g)
+                self.histo_b.setData(self.img.histogram_edges, self.img.histogram_b)
+
+        logy = self.log_mode.isChecked()
+        self.histo_m.setLogMode(False, logy)
+        self.histo_r.setLogMode(False, logy)
+        self.histo_g.setLogMode(False, logy)
+        self.histo_b.setLogMode(False, logy)
 
     def thread_receive(self, message_type, message, data=None):
         try:
@@ -184,13 +200,17 @@ class UI(QMainWindow):
             color_mode_box.addWidget(radiobutton, 0, idx)
             self.color_modes.append(radiobutton)
 
+        self.log_mode = QCheckBox('Log Histo')
+        self.log_mode.stateChanged.connect(self.update_histogram)
+
         self.control_widget = QFrame()
         self.control_widget.setFrameStyle(QFrame.Panel | QFrame.Raised)
         control_box = QtWidgets.QGridLayout()
-        control_box.setAlignment(QtCore.Qt.AlignLeft)
+        #control_box.setAlignment(QtCore.Qt.AlignLeft)
         self.control_widget.setLayout(control_box)
         control_box.addWidget(self.buttons["load"], 0, 0)
         control_box.addWidget(self.color_mode_widget, 0, 1)
+        control_box.addWidget(self.log_mode, 0, 2)
 
         self.canvas_layout.addWidget(self.control_widget, 2, 0, 1, 1)
 
